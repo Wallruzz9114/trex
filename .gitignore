@@ -63,3 +63,5 @@ buck-out/
 /ios/Pods/
 .eslintrc
 .prettierrc
+android/app/google-services.json
+ios/GoogleService-Info.plist

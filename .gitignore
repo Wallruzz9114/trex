@@ -64,4 +64,5 @@ buck-out/
 .eslintrc
 .prettierrc
 android/app/google-services.json
+ios/trex/Info.plist
 ios/GoogleService-Info.plist

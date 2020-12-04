@@ -10,6 +10,8 @@ target 'trex' do
 
   use_react_native!(:path => config["reactNativePath"])
 
+
+
   target 'trexTests' do
     inherit! :complete
     # Pods for testing

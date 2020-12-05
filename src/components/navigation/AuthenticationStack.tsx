@@ -1,7 +1,7 @@
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import React from 'react';
-// import ForgotPassword from '../../screens/ForgotPassword';
-// import LoginScreen from '../../screens/LoginScreen';
+import ForgotPasswordScreen from '../../screens/ForgotPasswordScreen';
+import LoginScreen from '../../screens/LoginScreen';
 import RegisterScreen from '../../screens/RegisterScreen';
 
 type AuthenticationStackComponents = {
@@ -17,7 +17,9 @@ const AuthenticationStack = () => {
 
   return (
     <Stack.Navigator screenOptions={navigationOptions}>
+      <Stack.Screen component={LoginScreen} name="LoginScreen" />
       <Stack.Screen component={RegisterScreen} name="RegisterScreen" />
+      <Stack.Screen component={ForgotPasswordScreen} name="ForgotPasswordScreen" />
     </Stack.Navigator>
   );
 };

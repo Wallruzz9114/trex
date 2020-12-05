@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../constants';
+import { navigation } from '../utils/navigation/rootNavigation';
 
 const styles = StyleSheet.create({
   container: {
@@ -160,6 +161,8 @@ const LoginScreen = (): JSX.Element => {
     setPassword(input);
   };
 
+  const _goToRegisterScreen = (): void => navigation.navigate('RegisterScreen');
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.languageChooser}>
@@ -173,7 +176,7 @@ const LoginScreen = (): JSX.Element => {
           <Image
             resizeMode="contain"
             style={styles.logo}
-            source={require('../../assets/images/logo.png')}
+            source={require('../assets/images/logo.png')}
           />
         </View>
         <View style={styles.loginForm}>
@@ -265,6 +268,29 @@ const LoginScreen = (): JSX.Element => {
           </TouchableOpacity>
         </View>
       </View>
+      <TouchableOpacity
+        onPress={_goToRegisterScreen}
+        activeOpacity={1}
+        style={styles.registerWrapper}
+      >
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 12,
+            fontWeight: '600',
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: '500',
+              color: '#333',
+            }}
+          >
+            Don't have account?
+          </Text>{' '}
+          Register now.
+        </Text>
+      </TouchableOpacity>
       <View style={styles.registerWrapper}>
         <Text
           style={{

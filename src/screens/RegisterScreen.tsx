@@ -1,6 +1,7 @@
 import { Formik, FormikProps } from 'formik';
 import React, { useState } from 'react';
 import {
+  Alert,
   Animated,
   Easing,
   Image,
@@ -22,6 +23,7 @@ import {
   RegisterFormInputThirdStep,
 } from '../models/registerFormInputs';
 import { navigation } from '../utils/navigation/rootNavigation';
+import { WelcomeParams } from './WelcomeScreen';
 
 const styles = StyleSheet.create({
   container: {
@@ -256,6 +258,7 @@ const Register = () => {
   const [phone, setPhone] = useState<string>('');
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [rememberPassword, setRememberPassword] = useState<boolean>(true);
   const [birthday, setBirthday] = useState<RegisterFormInputThirdStep>({
     date: 1,
     month: 1,
@@ -277,18 +280,36 @@ const Register = () => {
     setStep(step + 1);
     setUsername(values.username);
     setPassword(values.password);
+    setRememberPassword(values.rememberPassword);
   };
 
-  const _onValidatedStep3 = (values: RegisterFormInputThirdStep): void => {
+  const validateStepThree = (values: RegisterFormInputThirdStep): void => {
+    const selectedDate = new Date(`${MONTH_ALIAS[values.month]} ${values.date} ${values.year}`);
+
     if (
-      Math.floor(
-        (new Date().getTime() -
-          new Date(`${MONTH_ALIAS[values.month]} ${values.date}, ${values.year}`).getTime()) /
-          (1000 * 60 * 60 * 24 * 365)
-      ) > 5
+      selectedDate.getDate() != values.date ||
+      selectedDate.getFullYear() != values.year ||
+      selectedDate.getMonth() != values.month
     ) {
-      setBirthday(values);
-      setStep(step + 1);
+      Alert.alert('Error', 'Invalid birthday!');
+      return;
+    }
+
+    if (
+      Math.floor((new Date().getTime() - selectedDate.getTime()) / (1000 * 60 * 60 * 24 * 365)) > 5
+    ) {
+      const params: WelcomeParams = {
+        date: values.date,
+        month: values.month,
+        year: values.year,
+        phone,
+        email,
+        username,
+        password,
+        rememberPassword,
+      };
+
+      navigation.navigate('WelcomeScreen');
     }
   };
 
@@ -314,6 +335,7 @@ const Register = () => {
         is: (email: string) => !email || currentTab === 1,
         then: yup
           .string()
+          .min(6)
           .matches(
             /^.*(?=.{8,})((?=.*[!@#$%^&*()\-_=+{};:,<.>]){1})(?=.*\d)((?=.*[a-z]){1})((?=.*[A-Z]){1}).*$/,
             'Password must contain at least 8 characters, one uppercase, one number and one special case character'
@@ -505,7 +527,7 @@ const Register = () => {
                           <TextInput
                             onBlur={formikProps.handleBlur('email')}
                             onChangeText={(e) => {
-                              formikProps.handleChange('email')(e);
+                              formikProps.handleChange('email')(e.toLowerCase());
                               formikProps.setFieldTouched('email', false, false);
                             }}
                             autoFocus={true}
@@ -754,7 +776,7 @@ const Register = () => {
             <Formik
               validateOnBlur={false}
               validateOnChange={false}
-              onSubmit={_onValidatedStep3}
+              onSubmit={validateStepThree}
               validationSchema={stepThreeSchema}
               initialValues={birthday}
             >
@@ -911,7 +933,7 @@ const Register = () => {
       )}
       {step === 1 && (
         <TouchableOpacity
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('LoginScreen')}
           activeOpacity={1}
           style={styles.btnLogin}
         >

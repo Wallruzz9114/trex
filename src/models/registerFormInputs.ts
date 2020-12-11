@@ -1,3 +1,5 @@
+import { WelcomeParams } from '../screens/WelcomeScreen';
+
 export interface RegisterFormInputFirstStep {
   phone: string;
   email: string;
@@ -14,3 +16,5 @@ export interface RegisterFormInputThirdStep {
   month: number;
   year: number;
 }
+
+export type RegisterParams = WelcomeParams & { username: string };

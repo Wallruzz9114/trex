@@ -1,5 +1,5 @@
+import { IUserPayload } from './../redux/refucers/userReducer';
 import { IPhoto } from './photo';
-import { IUserPayload } from './user';
 
 export interface IUserInfo {
   user: {} | IUserPayload;

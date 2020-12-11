@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Animated,
   Image,
   SafeAreaView,
   StyleSheet,
@@ -9,7 +10,12 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useDispatch } from 'react-redux';
+import { ThunkDispatch } from 'redux-thunk';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from '../constants';
+import { LoginRequest } from '../events/userActions';
+import { ILoginFormInput } from '../models/loginFormInput';
+import { UserAction } from '../redux/refucers/userReducer';
 import { navigation } from '../utils/navigation/rootNavigation';
 
 const styles = StyleSheet.create({
@@ -135,6 +141,24 @@ const styles = StyleSheet.create({
     borderTopColor: '#ddd',
     borderTopWidth: 1,
   },
+
+  loadingWrapper: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    zIndex: 99,
+  },
+
+  loading: {
+    flexDirection: 'row',
+    padding: 15,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
 });
 
 const setLoginPermission = (
@@ -143,28 +167,128 @@ const setLoginPermission = (
   canLogin: React.Dispatch<React.SetStateAction<boolean>>
 ) => (username.length > 0 && password.length > 0 ? canLogin(true) : canLogin(false));
 
+const allowLoginCheck = (
+  username: string,
+  password: string,
+  setallowLogin: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  if (username.length > 0 && password.length > 0) setallowLogin(true);
+};
+
+const getEventHandlers = (
+  sethidePassword: React.Dispatch<React.SetStateAction<boolean>>,
+  hidePassword: boolean,
+  password: string,
+  setallowLogin: React.Dispatch<React.SetStateAction<boolean>>,
+  setUsername: React.Dispatch<React.SetStateAction<string>>,
+  username: string,
+  setPassword: React.Dispatch<React.SetStateAction<string>>,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  dispatch: ThunkDispatch<{}, {}, UserAction>
+) => {
+  const _onPressToggleHidePassword = (): void => {
+    sethidePassword(!hidePassword);
+  };
+
+  const _onChangeUsername = (text: string): void => {
+    allowLoginCheck(text, password, setallowLogin);
+    setUsername(text);
+  };
+
+  const _onChangePassword = (text: string): void => {
+    allowLoginCheck(username, text, setallowLogin);
+    setPassword(text);
+  };
+
+  const _onPressRegister = (): void => {
+    navigation.navigate('RegisterScreen');
+  };
+
+  const _onLogin = async () => {
+    setLoading(true);
+    const loginData: ILoginFormInput = {
+      email: username,
+      password,
+    };
+    await dispatch(LoginRequest(loginData));
+    setLoading(false);
+  };
+
+  return {
+    _onChangeUsername,
+    _onChangePassword,
+    _onPressToggleHidePassword,
+    _onLogin,
+    _onPressRegister,
+  };
+};
+
 const LoginScreen = (): JSX.Element => {
+  const dispatch = useDispatch();
+
+  const [loading, setLoading] = useState<boolean>(false);
   const [hidePassword, setHidePassword] = useState(true);
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [allowLogin, setAllowLogin] = useState(false);
 
+  const _loadingDegree = new Animated.Value(0);
+
+  const _animationLoadingDegree = () =>
+    Animated.timing(_loadingDegree, { useNativeDriver: true, toValue: 1, duration: 400 }).start(
+      () => {
+        _loadingDegree.setValue(0);
+        if (loading) _animationLoadingDegree();
+      }
+    );
+
+  const {
+    _onChangeUsername,
+    _onChangePassword,
+    _onPressToggleHidePassword,
+    _onLogin,
+    _onPressRegister,
+  } = getEventHandlers(
+    setHidePassword,
+    hidePassword,
+    password,
+    setAllowLogin,
+    setUsername,
+    username,
+    setPassword,
+    setLoading,
+    dispatch
+  );
+
   const _togglePasswordVisibility = (): void => setHidePassword(!hidePassword);
-
-  const _onChangeUsername = (input: string): void => {
-    setLoginPermission(input, password, setAllowLogin);
-    setUsername(input);
-  };
-
-  const _onChangePassword = (input: string): void => {
-    setLoginPermission(username, input, setAllowLogin);
-    setPassword(input);
-  };
 
   const _goToRegisterScreen = (): void => navigation.navigate('RegisterScreen');
 
   return (
     <SafeAreaView style={styles.container}>
+      {loading && (
+        <View style={styles.loadingWrapper}>
+          <View style={styles.loading}>
+            <Animated.Image
+              onLayout={_animationLoadingDegree}
+              style={{
+                width: 30,
+                height: 30,
+                marginRight: 10,
+                transform: [
+                  {
+                    rotate: _loadingDegree.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                ],
+              }}
+              source={require('../assets/icons/waiting.png')}
+            />
+          </View>
+        </View>
+      )}
       <View style={styles.languageChooser}>
         <TouchableOpacity style={styles.btnCurLanguage}>
           <Text style={styles.curLanguage}>French (Canada)</Text>
@@ -182,6 +306,7 @@ const LoginScreen = (): JSX.Element => {
         <View style={styles.loginForm}>
           <View style={styles.textInputWrapper}>
             <TextInput
+              autoCapitalize="none"
               value={username}
               onChangeText={_onChangeUsername}
               placeholder="Username"
@@ -205,6 +330,7 @@ const LoginScreen = (): JSX.Element => {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
+            onPress={_onLogin}
             disabled={!allowLogin}
             activeOpacity={0.6}
             style={{
@@ -224,7 +350,11 @@ const LoginScreen = (): JSX.Element => {
           </TouchableOpacity>
         </View>
         <View style={styles.otherOptionsWrapper}>
-          <TouchableOpacity style={styles.forgotPassword} activeOpacity={1}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ForgotPasswordScreen')}
+            style={styles.forgotPassword}
+            activeOpacity={1}
+          >
             <Text
               style={{
                 textAlign: 'center',
